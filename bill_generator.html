@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bill Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --ink:#111111;
+    --paper:#ffffff;
+    --line:#111111;
+    --muted:#666;
+    --accent:#6a6fd8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Arial, sans-serif;
+    background:#e9e9e9;
+    padding:24px 12px 60px;
+    color:var(--ink);
+  }
+  .wrap{
+    max-width:1000px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+  .toolbar{
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:16px 18px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    align-items:flex-end;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-size:12px;
+    color:#333;
+  }
+  .field label{font-weight:600;}
+  .field input[type=file]{font-size:12px;}
+  button{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:10px 16px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  button.secondary{
+    background:#fff;
+    color:var(--ink);
+    border:1px solid #999;
+  }
+  button:hover{opacity:0.9;}
+
+  #bill{
+    background:var(--paper);
+    width:850px;
+    margin:0 auto;
+    border:1px solid #ccc;
+    box-shadow:0 6px 18px rgba(0,0,0,0.12);
+    padding-bottom:24px;
+  }
+  .topbar{
+    background:#000;
+    color:#fff;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 26px;
+    font-size:15px;
+  }
+  .topbar .cell{outline:none;}
+  .thickline{height:8px;background:#000;}
+  .header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:22px 26px 6px;
+  }
+  .logo-area{display:flex;flex-direction:column;gap:6px;}
+  .logo-img{
+    max-height:70px;
+    max-width:260px;
+    object-fit:contain;
+    display:block;
+  }
+  .logo-placeholder{
+    font-size:34px;
+    font-weight:800;
+    letter-spacing:1px;
+  }
+  .logo-placeholder .tech{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:6px;
+    margin-top:2px;
+  }
+  .bill-no{
+    font-size:15px;
+    margin-top:6px;
+  }
+  .date-block{
+    text-align:right;
+    font-size:16px;
+  }
+  .info-block{
+    padding:6px 26px 14px;
+  }
+  .info-row{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    font-size:17px;
+    font-weight:700;
+    margin-bottom:8px;
+    border-bottom:1px solid #000;
+    padding-bottom:4px;
+  }
+  .info-row .val{
+    font-weight:400;
+    flex:1;
+    outline:none;
+  }
+  table.bill-table{
+    width:calc(100% - 52px);
+    margin:0 26px;
+    border-collapse:collapse;
+    font-size:14px;
+  }
+  table.bill-table th, table.bill-table td{
+    border:1px solid #000;
+    padding:8px 10px;
+    text-align:left;
+  }
+  table.bill-table th{
+    font-weight:700;
+  }
+  table.bill-table td[contenteditable], table.bill-table th[contenteditable]{
+    outline:none;
+  }
+  .amt-col, .qty-col{text-align:left;}
+  tr.blank-row td{height:34px;}
+  .total-row td{
+    font-weight:700;
+  }
+  .total-label{text-align:right;}
+  .words-row td:first-child{font-weight:700;}
+  .footnote{
+    padding:10px 26px 0;
+    font-size:12px;
+    font-weight:700;
+  }
+  .sign-row{
+    display:flex;
+    justify-content:flex-end;
+    align-items:flex-end;
+    padding:20px 26px 4px;
+    gap:14px;
+  }
+  .sign-block{
+    text-align:center;
+  }
+  .sign-logo-img{
+    max-height:60px;
+    max-width:200px;
+    object-fit:contain;
+    display:block;
+    margin:0 auto 4px;
+  }
+  .sign-placeholder{
+    color:var(--accent);
+    font-size:26px;
+    font-weight:800;
+  }
+  .sign-label{
+    font-size:16px;
+    border-top:1px solid #000;
+    padding-top:2px;
+    margin-top:2px;
+  }
+  .bottombar{height:16px;background:#000;margin-top:10px;}
+  .row-controls{
+    display:flex;
+    gap:8px;
+    margin:8px 26px 0;
+  }
+  .hint{
+    font-size:11px;
+    color:#888;
+    margin-top:-8px;
+  }
+  [contenteditable]:hover{background:rgba(0,0,0,0.03);}
+  [contenteditable]:focus{background:rgba(106,111,216,0.08);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="toolbar">
+    <div class="field">
+      <label>Company logo (top left)</label>
+      <input type="file" id="logoInput" accept="image/*">
+    </div>
+    <div class="field">
+      <label>Signature / stamp logo (bottom right)</label>
+      <input type="file" id="signLogoInput" accept="image/*">
+    </div>
+    <button class="secondary" id="addRowBtn" type="button">+ Add service row</button>
+    <button class="secondary" id="removeRowBtn" type="button">- Remove last row</button>
+    <button id="downloadBtn" type="button">Save &amp; download as JPG</button>
+  </div>
+  <div class="hint">Click directly on any text in the bill below to edit it. Your changes and uploaded logos are kept while this page stays open, and are baked into the JPG you download.</div>
+
+  <div id="bill">
+    <div class="topbar">
+      <div class="cell" contenteditable="true">Contact No: 9867476797 / 9857075774</div>
+      <div class="cell" contenteditable="true">PAN No: 622628873</div>
+    </div>
+    <div class="thickline"></div>
+
+    <div class="header-row">
+      <div class="logo-area">
+        <img id="logoImg" class="logo-img" style="display:none;">
+        <div id="logoPlaceholder" class="logo-placeholder" contenteditable="true">NetLOOM<span class="tech">TECHNOLOGY</span></div>
+        <div class="bill-no"><b contenteditable="true">Bill No:</b> <span contenteditable="true">NL-83-49</span></div>
+      </div>
+      <div class="date-block">
+        <b contenteditable="true">Date :</b> <span contenteditable="true">18/03/2083</span>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <div class="info-row"><span>Name :</span><span class="val" contenteditable="true">Nepathya College of Management &amp; Technology</span></div>
+      <div class="info-row"><span>Address :</span><span class="val" contenteditable="true">Tilottama-5, Manigram</span></div>
+    </div>
+
+    <table class="bill-table" id="billTable">
+      <thead>
+        <tr>
+          <th style="width:6%" contenteditable="true">S.N</th>
+          <th style="width:12%" contenteditable="true">Date</th>
+          <th contenteditable="true">Services</th>
+          <th style="width:14%" contenteditable="true">Days/Qty</th>
+          <th style="width:18%" contenteditable="true">Amount Inc. SC</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td contenteditable="true">1</td>
+          <td contenteditable="true">20-Jun</td>
+          <td contenteditable="true">Admission open grade 11</td>
+          <td class="qty-col" contenteditable="true">10 days</td>
+          <td class="amt-col" contenteditable="true">Rs 3,875</td>
+        </tr>
+        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>
+        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>
+        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="4" class="total-label" contenteditable="true">Total Amount</td>
+          <td contenteditable="true">Rs 3,875</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <table class="bill-table words-row" style="margin-top:-1px;">
+      <tr>
+        <td style="width:12%" contenteditable="true">In Words</td>
+        <td contenteditable="true">Three Thousand eight Hundred &amp; seventy five Only</td>
+      </tr>
+    </table>
+
+    <div class="footnote" contenteditable="true">* SC: Service Charge</div>
+
+    <div class="sign-row">
+      <div class="sign-block">
+        <img id="signLogoImg" class="sign-logo-img" style="display:none;">
+        <div id="signPlaceholder" class="sign-placeholder" contenteditable="true">NetLOOM</div>
+        <div class="sign-label" contenteditable="true">Signature</div>
+      </div>
+    </div>
+    <div class="bottombar"></div>
+  </div>
+
+</div>
+
+<script>
+function handleLogoUpload(inputId, imgId, placeholderId){
+  document.getElementById(inputId).addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = document.getElementById(imgId);
+      img.src = ev.target.result;
+      img.style.display = 'block';
+      document.getElementById(placeholderId).style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+}
+handleLogoUpload('logoInput', 'logoImg', 'logoPlaceholder');
+handleLogoUpload('signLogoInput', 'signLogoImg', 'signPlaceholder');
+
+document.getElementById('addRowBtn').addEventListener('click', function(){
+  const tbody = document.querySelector('#billTable tbody');
+  const tr = document.createElement('tr');
+  tr.className = 'blank-row';
+  tr.innerHTML = '<td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td>';
+  tbody.appendChild(tr);
+});
+document.getElementById('removeRowBtn').addEventListener('click', function(){
+  const tbody = document.querySelector('#billTable tbody');
+  if(tbody.rows.length > 1){
+    tbody.deleteRow(tbody.rows.length - 1);
+  }
+});
+
+document.getElementById('downloadBtn').addEventListener('click', function(){
+  const bill = document.getElementById('bill');
+  html2canvas(bill, {scale: 2, backgroundColor: '#ffffff', useCORS: true}).then(function(canvas){
+    const link = document.createElement('a');
+    const billNoEl = document.querySelectorAll('.bill-no span')[0];
+    const billNo = billNoEl ? billNoEl.innerText.trim().replace(/[^a-zA-Z0-9-]/g, '') : 'bill';
+    link.download = 'bill_' + (billNo || 'invoice') + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+  });
+});
+</script>
+</body>
+</html>
