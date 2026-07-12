@@ -219,6 +219,11 @@
   .sign-block{
     text-align:center;
   }
+  .sign-rotate-wrap{
+    display:inline-block;
+    transform:rotate(0deg);
+    transition:transform 0.1s ease;
+  }
   .sign-logo-img{
     max-height:60px;
     max-width:200px;
@@ -236,6 +241,19 @@
     border-top:1px solid #000;
     padding-top:2px;
     margin-top:2px;
+  }
+  .sign-rotate-controls{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin-top:8px;
+  }
+  .sign-rotate-controls button{
+    flex:0 0 auto;
+    min-height:30px;
+    padding:4px 10px;
+    font-size:13px;
+    border-radius:6px;
   }
   .bottombar{height:16px;background:#000;margin-top:10px;}
   .row-controls{
@@ -282,10 +300,10 @@
       <div class="logo-area">
         <img id="logoImg" class="logo-img" style="display:none;">
         <div id="logoPlaceholder" class="logo-placeholder" contenteditable="true">NetLOOM<span class="tech">TECHNOLOGY</span></div>
-        <div class="bill-no"><b contenteditable="true">Bill No:</b> <span contenteditable="true">NL-83-49</span></div>
+        <div class="bill-no"><b contenteditable="true">Bill No:</b> <span id="billNoSpan" contenteditable="true">NL-00-00</span> <button type="button" id="regenBillNoBtn" class="no-export" style="font-size:11px;padding:4px 8px;min-height:auto;border-radius:4px;">↻ New No.</button></div>
       </div>
       <div class="date-block">
-        <b contenteditable="true">Date :</b> <span contenteditable="true">18/03/2083</span>
+        <b contenteditable="true">Date :</b> <span id="billDateSpan" contenteditable="true">18/03/2083</span>
       </div>
     </div>
 
@@ -328,9 +346,16 @@
 
     <div class="sign-row">
       <div class="sign-block">
-        <img id="signLogoImg" class="sign-logo-img" style="display:none;">
-        <div id="signPlaceholder" class="sign-placeholder" contenteditable="true">NetLOOM</div>
+        <div id="signRotateWrap" class="sign-rotate-wrap">
+          <img id="signLogoImg" class="sign-logo-img" style="display:none;">
+          <div id="signPlaceholder" class="sign-placeholder" contenteditable="true">NetLOOM</div>
+        </div>
         <div class="sign-label" contenteditable="true">Signature</div>
+        <div class="sign-rotate-controls no-export">
+          <button type="button" id="signRotateLeftBtn" title="Rotate left">⟲</button>
+          <button type="button" id="signRotateRightBtn" title="Rotate right">⟳</button>
+          <button type="button" id="signRotateResetBtn" title="Reset rotation">Reset</button>
+        </div>
       </div>
     </div>
     <div class="bottombar"></div>
@@ -383,6 +408,36 @@ document.getElementById('addRowBtn').addEventListener('click', recalcTotal);
 document.getElementById('removeRowBtn').addEventListener('click', recalcTotal);
 recalcTotal();
 
+function generateBillNumber(){
+  let used = [];
+  try{
+    used = JSON.parse(localStorage.getItem('netloom_used_bill_numbers') || '[]');
+  }catch(e){ used = []; }
+
+  let attempt, tries = 0;
+  do{
+    const part1 = String(Math.floor(1 + Math.random() * 99)).padStart(2,'0');
+    const part2 = String(Math.floor(1 + Math.random() * 99)).padStart(2,'0');
+    attempt = 'NL-' + part1 + '-' + part2;
+    tries++;
+  } while(used.indexOf(attempt) !== -1 && tries < 500);
+
+  used.push(attempt);
+  if(used.length > 2000){ used = used.slice(used.length - 2000); }
+  try{
+    localStorage.setItem('netloom_used_bill_numbers', JSON.stringify(used));
+  }catch(e){}
+
+  return attempt;
+}
+
+function assignNewBillNumber(){
+  document.getElementById('billNoSpan').innerText = generateBillNumber();
+}
+
+assignNewBillNumber();
+document.getElementById('regenBillNoBtn').addEventListener('click', assignNewBillNumber);
+
 function handleLogoUpload(inputId, imgId, placeholderId){
   document.getElementById(inputId).addEventListener('change', function(e){
     const file = e.target.files[0];
@@ -399,6 +454,24 @@ function handleLogoUpload(inputId, imgId, placeholderId){
 }
 handleLogoUpload('logoInput', 'logoImg', 'logoPlaceholder');
 handleLogoUpload('signLogoInput', 'signLogoImg', 'signPlaceholder');
+
+let signRotation = 0;
+const signRotateWrap = document.getElementById('signRotateWrap');
+function applySignRotation(){
+  signRotateWrap.style.transform = 'rotate(' + signRotation + 'deg)';
+}
+document.getElementById('signRotateLeftBtn').addEventListener('click', function(){
+  signRotation -= 15;
+  applySignRotation();
+});
+document.getElementById('signRotateRightBtn').addEventListener('click', function(){
+  signRotation += 15;
+  applySignRotation();
+});
+document.getElementById('signRotateResetBtn').addEventListener('click', function(){
+  signRotation = 0;
+  applySignRotation();
+});
 
 document.getElementById('addRowBtn').addEventListener('click', function(){
   const tbody = document.querySelector('#billTable tbody');
@@ -419,6 +492,8 @@ document.getElementById('downloadBtn').addEventListener('click', function(){
   const stage = document.getElementById('billStage');
   const prevTransform = bill.style.transform;
   const prevHeight = stage.style.height;
+  const noExportEls = bill.querySelectorAll('.no-export');
+  noExportEls.forEach(function(el){ el.style.visibility = 'hidden'; });
   bill.style.transform = 'scale(1)';
   stage.style.height = bill.scrollHeight + 'px';
   html2canvas(bill, {scale: 2, backgroundColor: '#ffffff', useCORS: true}).then(function(canvas){
@@ -430,13 +505,38 @@ document.getElementById('downloadBtn').addEventListener('click', function(){
     link.click();
     bill.style.transform = prevTransform;
     stage.style.height = prevHeight;
+    noExportEls.forEach(function(el){ el.style.visibility = ''; });
     fitBillToScreen();
   }).catch(function(){
+    noExportEls.forEach(function(el){ el.style.visibility = ''; });
     bill.style.transform = prevTransform;
     stage.style.height = prevHeight;
     fitBillToScreen();
   });
 });
+</script>
+
+<script type="module">
+  // Auto-fill today's Bikram Sambat (Nepali) date using verified BS calendar data,
+  // loaded live from the '@sonill/nepali-dates' package via jsDelivr's ESM CDN.
+  (async function setTodayNepaliDate(){
+    const span = document.getElementById('billDateSpan');
+    try{
+      const mod = await import('https://cdn.jsdelivr.net/npm/@sonill/nepali-dates/+esm');
+      const adToBs = mod.adToBs || (mod.default && mod.default.adToBs);
+      if(typeof adToBs !== 'function') throw new Error('adToBs not found');
+      const now = new Date();
+      const bs = adToBs(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      const dd = String(bs.day).padStart(2, '0');
+      const mm = String(bs.month).padStart(2, '0');
+      const yyyy = bs.year;
+      span.innerText = dd + '/' + mm + '/' + yyyy;
+    }catch(err){
+      // If offline or the CDN can't be reached, leave the existing date
+      // in place so the field is still usable and editable by hand.
+      console.warn('Nepali date auto-fill unavailable, edit the date manually:', err);
+    }
+  })();
 </script>
 </body>
 </html>
