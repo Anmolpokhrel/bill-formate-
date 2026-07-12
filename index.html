@@ -160,10 +160,17 @@
     width:calc(100% - 52px);
     margin:0 26px;
     border-collapse:collapse;
+    border-top:1px solid #000;
+    border-bottom:1px solid #000;
+    border-left:1px solid #000;
+    border-right:1px solid #000;
     font-size:14px;
   }
   table.bill-table th, table.bill-table td{
-    border:1px solid #000;
+    border-top:1px solid #000;
+    border-bottom:1px solid #000;
+    border-left:1px solid #fff;
+    border-right:1px solid #fff;
     padding:8px 10px;
     text-align:left;
   }
@@ -173,14 +180,30 @@
   table.bill-table td[contenteditable], table.bill-table th[contenteditable]{
     outline:none;
   }
+  table.bill-table thead th{
+    border-color:#000;
+  }
   .amt-col, .qty-col{text-align:left;}
   tr.blank-row td{height:34px;}
+  tr.blank-row td{
+    border-left-color:#000;
+    border-right-color:#000;
+  }
+  tr.blank-row:not(:first-of-type) td{
+    border-top-color:#fff;
+  }
+  tr.blank-row:not(:last-of-type) td{
+    border-bottom-color:#fff;
+  }
   .total-row td{
     font-weight:700;
-    border-top: 1px solid #ffffff;
+    border:1px solid #000 !important;
   }
   .total-label{text-align:right;}
   .words-row td:first-child{font-weight:700;}
+  .words-row td{
+    border:1px solid #000 !important;
+  }
   .footnote{
     padding:10px 26px 0;
     font-size:12px;
@@ -282,13 +305,6 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td contenteditable="true">1</td>
-          <td contenteditable="true">20-Jun</td>
-          <td contenteditable="true">Admission open grade 11</td>
-          <td class="qty-col" contenteditable="true">10 days</td>
-          <td class="amt-col" contenteditable="true">Rs 3,875</td>
-        </tr>
         <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td></tr>
         <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td></tr>
         <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td></tr>
@@ -296,7 +312,7 @@
       <tfoot>
         <tr class="total-row">
           <td colspan="4" class="total-label" contenteditable="true">Total Amount</td>
-          <td id="totalCell" contenteditable="true">Rs 3,875</td>
+          <td id="totalCell" contenteditable="true">Rs 0</td>
         </tr>
       </tfoot>
     </table>
@@ -304,7 +320,7 @@
     <table class="bill-table words-row" style="margin-top:-1px;">
       <tr>
         <td style="width:12%" contenteditable="true">In Words</td>
-        <td contenteditable="true">Three Thousand eight Hundred &amp; seventy five Only</td>
+        <td contenteditable="true">&nbsp;</td>
       </tr>
     </table>
 
