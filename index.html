@@ -288,14 +288,14 @@
           <td class="qty-col" contenteditable="true">10 days</td>
           <td class="amt-col" contenteditable="true">Rs 3,875</td>
         </tr>
-        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>
-        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>
-        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>
+        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td></tr>
+        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td></tr>
+        <tr class="blank-row"><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td></tr>
       </tbody>
       <tfoot>
         <tr class="total-row">
           <td colspan="4" class="total-label" contenteditable="true">Total Amount</td>
-          <td contenteditable="true">Rs 3,875</td>
+          <td id="totalCell" contenteditable="true">Rs 3,875</td>
         </tr>
       </tfoot>
     </table>
@@ -337,6 +337,35 @@ window.addEventListener('resize', fitBillToScreen);
 window.addEventListener('orientationchange', fitBillToScreen);
 new MutationObserver(fitBillToScreen).observe(document.getElementById('bill'), {childList:true, subtree:true, characterData:true});
 
+function parseAmount(text){
+  if(!text) return 0;
+  const match = text.replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+  return match ? parseFloat(match[0]) : 0;
+}
+
+function formatAmount(num){
+  const rounded = Math.round(num * 100) / 100;
+  return 'Rs ' + rounded.toLocaleString('en-IN');
+}
+
+function recalcTotal(){
+  const totalCell = document.getElementById('totalCell');
+  if(document.activeElement === totalCell) return;
+  const amtCells = document.querySelectorAll('#billTable tbody .amt-col');
+  let sum = 0;
+  amtCells.forEach(function(cell){ sum += parseAmount(cell.innerText); });
+  totalCell.innerText = formatAmount(sum);
+}
+
+document.getElementById('billTable').addEventListener('input', function(e){
+  if(e.target.classList && e.target.classList.contains('amt-col')){
+    recalcTotal();
+  }
+});
+document.getElementById('addRowBtn').addEventListener('click', recalcTotal);
+document.getElementById('removeRowBtn').addEventListener('click', recalcTotal);
+recalcTotal();
+
 function handleLogoUpload(inputId, imgId, placeholderId){
   document.getElementById(inputId).addEventListener('change', function(e){
     const file = e.target.files[0];
@@ -358,7 +387,7 @@ document.getElementById('addRowBtn').addEventListener('click', function(){
   const tbody = document.querySelector('#billTable tbody');
   const tr = document.createElement('tr');
   tr.className = 'blank-row';
-  tr.innerHTML = '<td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td>';
+  tr.innerHTML = '<td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td>';
   tbody.appendChild(tr);
 });
 document.getElementById('removeRowBtn').addEventListener('click', function(){
