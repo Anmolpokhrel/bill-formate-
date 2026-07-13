@@ -84,6 +84,12 @@
     display:flex;
     justify-content:center;
   }
+  #receiptStage{
+    width:100%;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+  }
   #bill{
     background:var(--paper);
     width:850px;
@@ -93,6 +99,55 @@
     box-shadow:0 6px 18px rgba(0,0,0,0.12);
     padding-bottom:24px;
     transform-origin:top center;
+  }
+  #receipt{
+    background:var(--paper);
+    width:850px;
+    flex:0 0 850px;
+    margin:0 auto;
+    border:1px solid #ccc;
+    box-shadow:0 6px 18px rgba(0,0,0,0.12);
+    padding-bottom:24px;
+    transform-origin:top center;
+  }
+  .page-label{
+    font-size:14px;
+    font-weight:700;
+    color:#333;
+    margin-top:6px;
+    padding-top:14px;
+    border-top:2px dashed #bbb;
+  }
+  .payment-method-row{
+    padding:14px 26px;
+    font-size:15px;
+    display:flex;
+    align-items:center;
+    gap:22px;
+  }
+  .tick-label{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+  .tick-box{
+    width:18px;
+    height:18px;
+    border:2px solid #000;
+    display:inline-block;
+    position:relative;
+    cursor:pointer;
+    flex:0 0 18px;
+  }
+  .tick-box.checked::after{
+    content:'✓';
+    position:absolute;
+    top:-5px;
+    left:2px;
+    font-size:16px;
+    font-weight:900;
+    line-height:1;
   }
   .topbar{
     background:#000;
@@ -204,6 +259,13 @@
   .words-row td{
     border:1px solid #000 !important;
   }
+  .received-section td{
+    border:1px solid #000 !important;
+    font-size:14px;
+  }
+  .received-section td:first-child{
+    font-weight:700;
+  }
   .footnote{
     padding:10px 26px 0;
     font-size:12px;
@@ -284,7 +346,7 @@
     </div>
     <button class="secondary" id="addRowBtn" type="button">+ Add service row</button>
     <button class="secondary" id="removeRowBtn" type="button">- Remove last row</button>
-    <button id="downloadBtn" type="button">Save &amp; download as JPG</button>
+    <button id="downloadBtn" type="button">Save &amp; download bill as JPG</button>
   </div>
   <div class="hint">Click directly on any text in the bill below to edit it. Your changes and uploaded logos are kept while this page stays open, and are baked into the JPG you download.</div>
 
@@ -308,8 +370,8 @@
     </div>
 
     <div class="info-block">
-      <div class="info-row"><span>Name :</span><span class="val" contenteditable="true"> </span></div>
-      <div class="info-row"><span>Address :</span><span class="val" contenteditable="true"> </span></div>
+      <div class="info-row"><span>Name :</span><span class="val" contenteditable="true">Nepathya College of Management &amp; Technology</span></div>
+      <div class="info-row"><span>Address :</span><span class="val" contenteditable="true">Tilottama-5, Manigram</span></div>
     </div>
 
     <table class="bill-table" id="billTable">
@@ -338,11 +400,12 @@
     <table class="bill-table words-row" style="margin-top:-1px;">
       <tr>
         <td style="width:12%" contenteditable="true">In Words</td>
-        <td contenteditable="true">&nbsp;</td>
+        <td id="wordsCell" contenteditable="true">&nbsp;</td>
       </tr>
     </table>
 
     <div class="footnote" contenteditable="true">* SC: Service Charge</div>
+
 
     <div class="sign-row">
       <div class="sign-block">
@@ -362,22 +425,105 @@
   </div>
   </div>
 
+  <div class="page-label">Page 2 — Payment Receipt</div>
+  <div class="toolbar">
+    <div class="field">
+      <label>Receipt logo (top left)</label>
+      <input type="file" id="receiptLogoInput" accept="image/*">
+    </div>
+    <div class="field">
+      <label>Received-by signature / stamp</label>
+      <input type="file" id="receiptSignLogoInput" accept="image/*">
+    </div>
+    <button id="downloadReceiptBtn" type="button">Save &amp; download receipt as JPG</button>
+  </div>
+  <div class="hint">This receipt is a separate page below the bill. Click any text to edit it; the amount and words auto-fill from "Amount Received" above but can be overridden here too.</div>
+
+  <div id="receiptStage">
+  <div id="receipt">
+    <div class="topbar">
+      <div class="cell" contenteditable="true">Contact No: 9867476797 / 9857075774</div>
+      <div class="cell" contenteditable="true">PAN No: 622628873</div>
+    </div>
+    <div class="thickline"></div>
+
+    <div class="header-row">
+      <div class="logo-area">
+        <img id="receiptLogoImg" class="logo-img" style="display:none;">
+        <div id="receiptLogoPlaceholder" class="logo-placeholder" contenteditable="true">NetLOOM<span class="tech">TECHNOLOGY</span></div>
+        <div class="bill-no"><b contenteditable="true">Receipt No:</b> <span id="receiptNoSpan" contenteditable="true">RC-00-00</span> <button type="button" id="regenReceiptNoBtn" class="no-export" style="font-size:11px;padding:4px 8px;min-height:auto;border-radius:4px;">↻ New No.</button></div>
+      </div>
+      <div class="date-block">
+        <b contenteditable="true">Date :</b> <span id="receiptDateSpan" contenteditable="true">18/03/2083</span>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <div class="info-row"><span>Received From :</span><span class="val" contenteditable="true">&nbsp;</span></div>
+      <div class="info-row"><span>Address :</span><span class="val" contenteditable="true">&nbsp;</span></div>
+    </div>
+
+    <table class="bill-table received-section" style="width:calc(100% - 52px); margin:0 26px;">
+      <tr>
+        <td style="width:12%" contenteditable="true">Amount</td>
+        <td id="receiptAmountCell" class="amt-col" contenteditable="true">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="width:12%" contenteditable="true">In Words</td>
+        <td id="receiptWordsCell" contenteditable="true">&nbsp;</td>
+      </tr>
+    </table>
+
+    <div class="payment-method-row">
+      <b>Payment Method:</b>
+      <label class="tick-label"><span id="cashTick" class="tick-box"></span>Cash</label>
+      <label class="tick-label"><span id="chequeTick" class="tick-box"></span>Cheque</label>
+    </div>
+
+    <div class="info-block" style="padding-top:0;">
+      <div class="info-row"><span>Received By :</span><span class="val" contenteditable="true">&nbsp;</span></div>
+    </div>
+
+    <div class="sign-row">
+      <div class="sign-block">
+        <div id="receiptSignRotateWrap" class="sign-rotate-wrap">
+          <img id="receiptSignLogoImg" class="sign-logo-img" style="display:none;">
+          <div id="receiptSignPlaceholder" class="sign-placeholder" contenteditable="true">NetLOOM</div>
+        </div>
+        <div class="sign-label" contenteditable="true">Signature</div>
+        <div class="sign-rotate-controls no-export">
+          <button type="button" id="receiptSignRotateLeftBtn" title="Rotate left">⟲</button>
+          <button type="button" id="receiptSignRotateRightBtn" title="Rotate right">⟳</button>
+          <button type="button" id="receiptSignRotateResetBtn" title="Reset rotation">Reset</button>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar"></div>
+  </div>
+  </div>
+
 </div>
 
 <script>
-function fitBillToScreen(){
-  const stage = document.getElementById('billStage');
-  const bill = document.getElementById('bill');
+function fitToScreen(stageId, docId){
+  const stage = document.getElementById(stageId);
+  const doc = document.getElementById(docId);
+  if(!stage || !doc) return;
   const naturalWidth = 850;
   const available = stage.clientWidth;
   const scale = Math.min(1, available / naturalWidth);
-  bill.style.transform = 'scale(' + scale + ')';
-  stage.style.height = (bill.scrollHeight * scale) + 'px';
+  doc.style.transform = 'scale(' + scale + ')';
+  stage.style.height = (doc.scrollHeight * scale) + 'px';
+}
+function fitBillToScreen(){
+  fitToScreen('billStage', 'bill');
+  fitToScreen('receiptStage', 'receipt');
 }
 window.addEventListener('load', fitBillToScreen);
 window.addEventListener('resize', fitBillToScreen);
 window.addEventListener('orientationchange', fitBillToScreen);
 new MutationObserver(fitBillToScreen).observe(document.getElementById('bill'), {childList:true, subtree:true, characterData:true});
+new MutationObserver(fitBillToScreen).observe(document.getElementById('receipt'), {childList:true, subtree:true, characterData:true});
 
 function parseAmount(text){
   if(!text) return 0;
@@ -390,13 +536,65 @@ function formatAmount(num){
   return 'Rs ' + rounded.toLocaleString('en-IN');
 }
 
+const ONES = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+  'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+const TENS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+function twoDigitsToWords(n){
+  if(n < 20) return ONES[n];
+  const t = Math.floor(n / 10), o = n % 10;
+  return TENS[t] + (o ? ' ' + ONES[o] : '');
+}
+function threeDigitsToWords(n){
+  const h = Math.floor(n / 100), rest = n % 100;
+  let out = '';
+  if(h) out += ONES[h] + ' Hundred';
+  if(rest){ out += (out ? ' and ' : '') + twoDigitsToWords(rest); }
+  return out;
+}
+function numberToWords(num){
+  num = Math.round(num);
+  if(num === 0) return 'Zero';
+  let crore = Math.floor(num / 10000000); num %= 10000000;
+  let lakh = Math.floor(num / 100000); num %= 100000;
+  let thousand = Math.floor(num / 1000); num %= 1000;
+  let rest = num;
+  const parts = [];
+  if(crore) parts.push(threeDigitsToWords(crore) + ' Crore');
+  if(lakh) parts.push(threeDigitsToWords(lakh) + ' Lakh');
+  if(thousand) parts.push(threeDigitsToWords(thousand) + ' Thousand');
+  if(rest) parts.push(threeDigitsToWords(rest));
+  return parts.join(' ');
+}
+function amountInWords(num){
+  return numberToWords(num) + ' Only';
+}
+
 function recalcTotal(){
   const totalCell = document.getElementById('totalCell');
-  if(document.activeElement === totalCell) return;
-  const amtCells = document.querySelectorAll('#billTable tbody .amt-col');
-  let sum = 0;
-  amtCells.forEach(function(cell){ sum += parseAmount(cell.innerText); });
-  totalCell.innerText = formatAmount(sum);
+  const wordsCell = document.getElementById('wordsCell');
+
+  if(document.activeElement !== totalCell){
+    const amtCells = document.querySelectorAll('#billTable tbody .amt-col');
+    let sum = 0;
+    amtCells.forEach(function(cell){ sum += parseAmount(cell.innerText); });
+    totalCell.innerText = formatAmount(sum);
+  }
+
+  const totalValue = parseAmount(totalCell.innerText);
+  if(wordsCell && document.activeElement !== wordsCell){
+    wordsCell.innerText = amountInWords(totalValue);
+  }
+
+  const receiptAmountCell = document.getElementById('receiptAmountCell');
+  const receiptWordsCell = document.getElementById('receiptWordsCell');
+  if(receiptAmountCell && document.activeElement !== receiptAmountCell){
+    receiptAmountCell.innerText = formatAmount(totalValue);
+  }
+  if(receiptAmountCell && receiptWordsCell && document.activeElement !== receiptWordsCell){
+    const receiptValue = parseAmount(receiptAmountCell.innerText);
+    receiptWordsCell.innerText = amountInWords(receiptValue);
+  }
 }
 
 document.getElementById('billTable').addEventListener('input', function(e){
@@ -404,39 +602,53 @@ document.getElementById('billTable').addEventListener('input', function(e){
     recalcTotal();
   }
 });
+document.getElementById('totalCell').addEventListener('input', recalcTotal);
+document.getElementById('receiptAmountCell').addEventListener('input', recalcTotal);
 document.getElementById('addRowBtn').addEventListener('click', recalcTotal);
 document.getElementById('removeRowBtn').addEventListener('click', recalcTotal);
 recalcTotal();
 
-function generateBillNumber(){
+function generateUniqueNumber(prefix, storageKey){
   let used = [];
   try{
-    used = JSON.parse(localStorage.getItem('netloom_used_bill_numbers') || '[]');
+    used = JSON.parse(localStorage.getItem(storageKey) || '[]');
   }catch(e){ used = []; }
 
   let attempt, tries = 0;
   do{
     const part1 = String(Math.floor(1 + Math.random() * 99)).padStart(2,'0');
     const part2 = String(Math.floor(1 + Math.random() * 99)).padStart(2,'0');
-    attempt = 'NL-' + part1 + '-' + part2;
+    attempt = prefix + '-' + part1 + '-' + part2;
     tries++;
   } while(used.indexOf(attempt) !== -1 && tries < 500);
 
   used.push(attempt);
   if(used.length > 2000){ used = used.slice(used.length - 2000); }
   try{
-    localStorage.setItem('netloom_used_bill_numbers', JSON.stringify(used));
+    localStorage.setItem(storageKey, JSON.stringify(used));
   }catch(e){}
 
   return attempt;
 }
 
+function generateBillNumber(){
+  return generateUniqueNumber('NL', 'netloom_used_bill_numbers');
+}
+function generateReceiptNumber(){
+  return generateUniqueNumber('RC', 'netloom_used_receipt_numbers');
+}
+
 function assignNewBillNumber(){
   document.getElementById('billNoSpan').innerText = generateBillNumber();
 }
+function assignNewReceiptNumber(){
+  document.getElementById('receiptNoSpan').innerText = generateReceiptNumber();
+}
 
 assignNewBillNumber();
+assignNewReceiptNumber();
 document.getElementById('regenBillNoBtn').addEventListener('click', assignNewBillNumber);
+document.getElementById('regenReceiptNoBtn').addEventListener('click', assignNewReceiptNumber);
 
 function handleLogoUpload(inputId, imgId, placeholderId){
   document.getElementById(inputId).addEventListener('change', function(e){
@@ -454,24 +666,40 @@ function handleLogoUpload(inputId, imgId, placeholderId){
 }
 handleLogoUpload('logoInput', 'logoImg', 'logoPlaceholder');
 handleLogoUpload('signLogoInput', 'signLogoImg', 'signPlaceholder');
+handleLogoUpload('receiptLogoInput', 'receiptLogoImg', 'receiptLogoPlaceholder');
+handleLogoUpload('receiptSignLogoInput', 'receiptSignLogoImg', 'receiptSignPlaceholder');
 
-let signRotation = 0;
-const signRotateWrap = document.getElementById('signRotateWrap');
-function applySignRotation(){
-  signRotateWrap.style.transform = 'rotate(' + signRotation + 'deg)';
+function setupSignRotation(wrapId, leftBtnId, rightBtnId, resetBtnId){
+  let rotation = 0;
+  const wrap = document.getElementById(wrapId);
+  function apply(){ wrap.style.transform = 'rotate(' + rotation + 'deg)'; }
+  document.getElementById(leftBtnId).addEventListener('click', function(){ rotation -= 15; apply(); });
+  document.getElementById(rightBtnId).addEventListener('click', function(){ rotation += 15; apply(); });
+  document.getElementById(resetBtnId).addEventListener('click', function(){ rotation = 0; apply(); });
 }
-document.getElementById('signRotateLeftBtn').addEventListener('click', function(){
-  signRotation -= 15;
-  applySignRotation();
+setupSignRotation('signRotateWrap', 'signRotateLeftBtn', 'signRotateRightBtn', 'signRotateResetBtn');
+setupSignRotation('receiptSignRotateWrap', 'receiptSignRotateLeftBtn', 'receiptSignRotateRightBtn', 'receiptSignRotateResetBtn');
+
+const cashTick = document.getElementById('cashTick');
+const chequeTick = document.getElementById('chequeTick');
+cashTick.addEventListener('click', function(){
+  cashTick.classList.toggle('checked');
+  if(cashTick.classList.contains('checked')) chequeTick.classList.remove('checked');
 });
-document.getElementById('signRotateRightBtn').addEventListener('click', function(){
-  signRotation += 15;
-  applySignRotation();
+chequeTick.addEventListener('click', function(){
+  chequeTick.classList.toggle('checked');
+  if(chequeTick.classList.contains('checked')) cashTick.classList.remove('checked');
 });
-document.getElementById('signRotateResetBtn').addEventListener('click', function(){
-  signRotation = 0;
-  applySignRotation();
-});
+
+function renumberRows(){
+  const rows = document.querySelectorAll('#billTable tbody tr');
+  rows.forEach(function(row, i){
+    const snCell = row.cells[0];
+    if(snCell && document.activeElement !== snCell){
+      snCell.innerText = String(i + 1);
+    }
+  });
+}
 
 document.getElementById('addRowBtn').addEventListener('click', function(){
   const tbody = document.querySelector('#billTable tbody');
@@ -479,40 +707,50 @@ document.getElementById('addRowBtn').addEventListener('click', function(){
   tr.className = 'blank-row';
   tr.innerHTML = '<td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td class="qty-col" contenteditable="true">&nbsp;</td><td class="amt-col" contenteditable="true">&nbsp;</td>';
   tbody.appendChild(tr);
+  renumberRows();
 });
 document.getElementById('removeRowBtn').addEventListener('click', function(){
   const tbody = document.querySelector('#billTable tbody');
   if(tbody.rows.length > 1){
     tbody.deleteRow(tbody.rows.length - 1);
   }
+  renumberRows();
 });
+renumberRows();
 
-document.getElementById('downloadBtn').addEventListener('click', function(){
-  const bill = document.getElementById('bill');
-  const stage = document.getElementById('billStage');
-  const prevTransform = bill.style.transform;
+function downloadDocAsJpg(docId, stageId, refitFn, numberSelector, filenamePrefix){
+  const doc = document.getElementById(docId);
+  const stage = document.getElementById(stageId);
+  const prevTransform = doc.style.transform;
   const prevHeight = stage.style.height;
-  const noExportEls = bill.querySelectorAll('.no-export');
+  const noExportEls = doc.querySelectorAll('.no-export');
   noExportEls.forEach(function(el){ el.style.visibility = 'hidden'; });
-  bill.style.transform = 'scale(1)';
-  stage.style.height = bill.scrollHeight + 'px';
-  html2canvas(bill, {scale: 2, backgroundColor: '#ffffff', useCORS: true}).then(function(canvas){
+  doc.style.transform = 'scale(1)';
+  stage.style.height = doc.scrollHeight + 'px';
+  html2canvas(doc, {scale: 2, backgroundColor: '#ffffff', useCORS: true}).then(function(canvas){
     const link = document.createElement('a');
-    const billNoEl = document.querySelectorAll('.bill-no span')[0];
-    const billNo = billNoEl ? billNoEl.innerText.trim().replace(/[^a-zA-Z0-9-]/g, '') : 'bill';
-    link.download = 'bill_' + (billNo || 'invoice') + '.jpg';
+    const numEl = document.querySelector(numberSelector);
+    const num = numEl ? numEl.innerText.trim().replace(/[^a-zA-Z0-9-]/g, '') : filenamePrefix;
+    link.download = filenamePrefix + '_' + (num || 'file') + '.jpg';
     link.href = canvas.toDataURL('image/jpeg', 0.95);
     link.click();
-    bill.style.transform = prevTransform;
+    doc.style.transform = prevTransform;
     stage.style.height = prevHeight;
     noExportEls.forEach(function(el){ el.style.visibility = ''; });
-    fitBillToScreen();
+    refitFn();
   }).catch(function(){
     noExportEls.forEach(function(el){ el.style.visibility = ''; });
-    bill.style.transform = prevTransform;
+    doc.style.transform = prevTransform;
     stage.style.height = prevHeight;
-    fitBillToScreen();
+    refitFn();
   });
+}
+
+document.getElementById('downloadBtn').addEventListener('click', function(){
+  downloadDocAsJpg('bill', 'billStage', fitBillToScreen, '#billNoSpan', 'bill');
+});
+document.getElementById('downloadReceiptBtn').addEventListener('click', function(){
+  downloadDocAsJpg('receipt', 'receiptStage', fitBillToScreen, '#receiptNoSpan', 'receipt');
 });
 </script>
 
@@ -520,7 +758,8 @@ document.getElementById('downloadBtn').addEventListener('click', function(){
   // Auto-fill today's Bikram Sambat (Nepali) date using verified BS calendar data,
   // loaded live from the '@sonill/nepali-dates' package via jsDelivr's ESM CDN.
   (async function setTodayNepaliDate(){
-    const span = document.getElementById('billDateSpan');
+    const billSpan = document.getElementById('billDateSpan');
+    const receiptSpan = document.getElementById('receiptDateSpan');
     try{
       const mod = await import('https://cdn.jsdelivr.net/npm/@sonill/nepali-dates/+esm');
       const adToBs = mod.adToBs || (mod.default && mod.default.adToBs);
@@ -530,7 +769,9 @@ document.getElementById('downloadBtn').addEventListener('click', function(){
       const dd = String(bs.day).padStart(2, '0');
       const mm = String(bs.month).padStart(2, '0');
       const yyyy = bs.year;
-      span.innerText = dd + '/' + mm + '/' + yyyy;
+      const formatted = dd + '/' + mm + '/' + yyyy;
+      billSpan.innerText = formatted;
+      if(receiptSpan) receiptSpan.innerText = formatted;
     }catch(err){
       // If offline or the CDN can't be reached, leave the existing date
       // in place so the field is still usable and editable by hand.
